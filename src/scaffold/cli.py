@@ -3,6 +3,7 @@
 import argparse
 
 from scaffold import __version__
+from scaffold.commands import new
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -16,12 +17,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="version",
         version=f"%(prog)s {__version__}",
     )
+    subparsers = parser.add_subparsers(title="comandos", dest="command")
+    new.register(subparsers)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     """Lee los argumentos y ejecuta la orden. Devuelve el código de salida."""
     parser = build_parser()
-    parser.parse_args(argv)
-    parser.print_help()
-    return 0
+    args = parser.parse_args(argv)
+    if args.command is None:
+        parser.print_help()
+        return 0
+    return args.func(args)
