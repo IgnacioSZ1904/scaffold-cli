@@ -7,8 +7,11 @@ name = "scaffold-cli"
 version = "0.1.0"
 description = "Genera el esqueleto de un proyecto con un solo comando."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = []
 
 [project.scripts]
 scaffold = "scaffold.cli:main"
+
+[tool.setuptools.package-data]
+scaffold = ["templates/**/*", "templates/**/.*"]

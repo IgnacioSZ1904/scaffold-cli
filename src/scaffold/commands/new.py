@@ -14,8 +14,8 @@ def register(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--template",
         "-t",
-        default="basic",
-        help="plantilla a usar (por defecto: basic)",
+        default="python",
+        help="plantilla a usar (por defecto: python)",
     )
     parser.set_defaults(func=run)
 
@@ -25,7 +25,7 @@ def run(args: argparse.Namespace) -> int:
     destination = Path.cwd() / args.name
     try:
         generator.generate(args.name, args.template, destination)
-    except FileExistsError as error:
+    except (FileExistsError, ValueError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
     print(f"Proyecto '{args.name}' creado en {destination}")
