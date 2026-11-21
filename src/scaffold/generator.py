@@ -1,5 +1,6 @@
 """Lógica para generar proyectos. No sabe nada de argparse ni de la terminal."""
 
+import re
 import tomllib
 from dataclasses import dataclass
 from datetime import date
@@ -10,6 +11,8 @@ from string import Template
 
 TEMPLATES = files("scaffold") / "templates"
 METADATA_FILE = "template.toml"
+DEFAULT_TEMPLATE = "python"
+_VALID_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_-]*")
 
 
 @dataclass(frozen=True)
@@ -36,6 +39,15 @@ def template_info(name: str) -> TemplateInfo:
 def list_templates() -> list[TemplateInfo]:
     """Devuelve la información de todas las plantillas, ordenadas por nombre."""
     return [template_info(name) for name in available_templates()]
+
+
+def validate_name(name: str) -> str | None:
+    """Devuelve un mensaje de error si `name` no vale como nombre de proyecto, o None."""
+    if not name:
+        return "el nombre no puede estar vacío"
+    if not _VALID_NAME.fullmatch(name):
+        return "usa solo letras, números, '-' y '_', empezando por una letra"
+    return None
 
 
 def build_variables(name: str) -> dict[str, str]:

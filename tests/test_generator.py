@@ -144,3 +144,13 @@ def test_write_fails_if_destination_exists(tmp_path):
 
     with pytest.raises(FileExistsError):
         generator.write(files, tmp_path / "mi-api")
+
+
+@pytest.mark.parametrize("name", ["mi-api", "MiApi", "api_2"])
+def test_validate_name_accepts_valid_names(name):
+    assert generator.validate_name(name) is None
+
+
+@pytest.mark.parametrize("name", ["", "mi api", "2api", "-api", "api/x", "ñandú"])
+def test_validate_name_rejects_invalid_names(name):
+    assert generator.validate_name(name) is not None

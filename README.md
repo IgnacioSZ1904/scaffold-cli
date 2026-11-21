@@ -22,5 +22,7 @@ python -m pytest
 ```bash
 python -m scaffold --help
 python -m scaffold list
-python -m scaffold new mi-proyecto -t python-fastapi
+python -m scaffold new                # modo interactivo
+python -m scaffold new mi-proyecto -t python-fastapi -o ..\proyectos --git
+python -m scaffold new mi-proyecto --dry-run
 ```

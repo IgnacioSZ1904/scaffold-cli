@@ -4,18 +4,21 @@ import argparse
 import sys
 from pathlib import Path
 
-from scaffold import generator, git
+from scaffold import generator, git, prompts
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:
     """Añade el subcomando `new` y sus argumentos al parser principal."""
     parser = subparsers.add_parser("new", help="crea un proyecto nuevo")
-    parser.add_argument("name", help="nombre del proyecto (y de su carpeta)")
+    parser.add_argument(
+        "name",
+        nargs="?",
+        help="nombre del proyecto; si no se indica, se pregunta (modo interactivo)",
+    )
     parser.add_argument(
         "--template",
         "-t",
-        default="python",
-        help="plantilla a usar (por defecto: python)",
+        help=f"plantilla a usar (por defecto: {generator.DEFAULT_TEMPLATE})",
     )
     parser.add_argument(
         "--output",
@@ -39,13 +42,29 @@ def register(subparsers: argparse._SubParsersAction) -> None:
 
 def run(args: argparse.Namespace) -> int:
     """Traduce los argumentos a una llamada al generador."""
+    if args.name is None:
+        if not sys.stdin.isatty():
+            print("Error: falta el nombre del proyecto", file=sys.stderr)
+            return 2
+        try:
+            _ask_missing(args)
+        except prompts.Cancelled:
+            print("Cancelado.", file=sys.stderr)
+            return 1
+
+    error = generator.validate_name(args.name)
+    if error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    template = args.template or generator.DEFAULT_TEMPLATE
+
     if args.output.is_file():
         print(f"Error: '{args.output}' es un archivo, no una carpeta", file=sys.stderr)
         return 1
 
     destination = (args.output / args.name).resolve()
     try:
-        files = generator.plan(args.name, args.template)
+        files = generator.plan(args.name, template)
         if args.dry_run:
             _print_plan(files, destination)
             if args.git:
@@ -65,6 +84,17 @@ def run(args: argparse.Namespace) -> int:
             return 1
         print("Repositorio git inicializado con un primer commit.")
     return 0
+
+
+def _ask_missing(args: argparse.Namespace) -> None:
+    """Modo interactivo: pregunta lo que no se pasó por la línea de comandos."""
+    args.name = prompts.ask_name()
+    if args.template is None:
+        args.template = prompts.ask_template(
+            generator.list_templates(), default=generator.DEFAULT_TEMPLATE
+        )
+    if not args.git:
+        args.git = prompts.ask_git()
 
 
 def _print_plan(files: list[generator.PlannedFile], destination: Path) -> None:
