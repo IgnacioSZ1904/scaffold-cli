@@ -52,7 +52,7 @@ def test_cancel_returns_1_and_creates_nothing(tmp_path, monkeypatch, terminal, c
     monkeypatch.setattr(prompts, "ask_name", cancel)
 
     assert main(["new"]) == 1
-    assert "Cancelado" in capsys.readouterr().err
+    assert "cancelado" in capsys.readouterr().err
     assert list(tmp_path.iterdir()) == []
 
 

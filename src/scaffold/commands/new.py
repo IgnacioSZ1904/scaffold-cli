@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from scaffold import generator, git, prompts
+from scaffold import generator, git, prompts, ui
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:
@@ -44,45 +44,44 @@ def run(args: argparse.Namespace) -> int:
     """Traduce los argumentos a una llamada al generador."""
     if args.name is None:
         if not sys.stdin.isatty():
-            print("Error: falta el nombre del proyecto", file=sys.stderr)
+            ui.error("falta el nombre del proyecto")
             return 2
         try:
             _ask_missing(args)
         except prompts.Cancelled:
-            print("Cancelado.", file=sys.stderr)
+            ui.warning("cancelado por el usuario")
             return 1
 
     error = generator.validate_name(args.name)
     if error:
-        print(f"Error: {error}", file=sys.stderr)
+        ui.error(error)
         return 1
     template = args.template or generator.DEFAULT_TEMPLATE
 
     if args.output.is_file():
-        print(f"Error: '{args.output}' es un archivo, no una carpeta", file=sys.stderr)
+        ui.error(f"'{args.output}' es un archivo, no una carpeta")
         return 1
 
     destination = (args.output / args.name).resolve()
     try:
         files = generator.plan(args.name, template)
         if args.dry_run:
-            _print_plan(files, destination)
-            if args.git:
-                print("[dry-run] Se inicializaría un repositorio git con un primer commit.")
+            ui.show_plan(files, destination, with_git=args.git)
             return 0
         generator.write(files, destination)
     except (FileExistsError, ValueError) as error:
-        print(f"Error: {error}", file=sys.stderr)
+        ui.error(str(error))
         return 1
-    print(f"Proyecto '{args.name}' creado en {destination}")
 
     if args.git:
         try:
             git.init_repo(destination)
         except git.GitError as error:
-            print(f"Aviso: el proyecto se creó, pero {error}", file=sys.stderr)
+            ui.success(f"Proyecto '{args.name}' creado en {destination}")
+            ui.warning(f"el proyecto se creó, pero {error}")
             return 1
-        print("Repositorio git inicializado con un primer commit.")
+
+    ui.show_summary(args.name, template, destination, with_git=args.git)
     return 0
 
 
@@ -95,12 +94,3 @@ def _ask_missing(args: argparse.Namespace) -> None:
         )
     if not args.git:
         args.git = prompts.ask_git()
-
-
-def _print_plan(files: list[generator.PlannedFile], destination: Path) -> None:
-    """Muestra el plan sin escribir nada."""
-    print(f"[dry-run] Se crearían {len(files)} archivos en {destination}:")
-    for file in files:
-        print(f"  {file.path.as_posix()}")
-    if destination.exists():
-        print(f"[dry-run] Aviso: '{destination}' ya existe, la creación real fallaría.")

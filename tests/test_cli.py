@@ -26,6 +26,16 @@ def test_new_creates_project_in_current_directory(tmp_path, monkeypatch):
     assert (tmp_path / "mi-api" / "README.md").is_file()
 
 
+def test_new_shows_summary_with_next_steps(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+
+    assert main(["new", "mi-api"]) == 0
+
+    output = capsys.readouterr().out
+    assert "Siguientes pasos" in output
+    assert "cd mi-api" in output
+
+
 def test_new_returns_error_if_folder_exists(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "mi-api").mkdir()
@@ -73,7 +83,8 @@ def test_new_dry_run_lists_files_and_creates_nothing(tmp_path, monkeypatch, caps
 
     output = capsys.readouterr().out
     assert "[dry-run]" in output
-    assert "src/mi_api/__init__.py" in output
+    assert "mi_api/" in output  # carpeta en el árbol
+    assert "__init__.py" in output
     assert list(tmp_path.iterdir()) == []
 
 
@@ -82,4 +93,4 @@ def test_new_dry_run_warns_if_folder_exists(tmp_path, monkeypatch, capsys):
     (tmp_path / "mi-api").mkdir()
 
     assert main(["new", "mi-api", "--dry-run"]) == 0
-    assert "ya existe" in capsys.readouterr().out
+    assert "ya existe" in capsys.readouterr().err
