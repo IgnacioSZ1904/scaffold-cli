@@ -39,3 +39,11 @@ def test_new_returns_error_with_unknown_template(tmp_path, monkeypatch, capsys):
 
     assert main(["new", "mi-api", "-t", "rust"]) == 1
     assert "no existe" in capsys.readouterr().err
+
+
+def test_list_shows_templates_with_description(capsys):
+    assert main(["list"]) == 0
+
+    output = capsys.readouterr().out
+    assert "python-fastapi" in output
+    assert "FastAPI" in output

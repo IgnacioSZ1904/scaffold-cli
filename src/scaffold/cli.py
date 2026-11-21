@@ -3,7 +3,7 @@
 import argparse
 
 from scaffold import __version__
-from scaffold.commands import new
+from scaffold.commands import list_templates, new
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,6 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(title="comandos", dest="command")
     new.register(subparsers)
+    list_templates.register(subparsers)
     return parser
 
 

@@ -92,3 +92,27 @@ def test_generate_fails_with_unknown_template(tmp_path):
         generator.generate("mi-api", "rust", destination)
 
     assert not destination.exists()
+
+
+@pytest.mark.parametrize("template", ALL_TEMPLATES)
+def test_every_template_has_metadata(template):
+    info = generator.template_info(template)
+
+    assert info.name == template
+    assert info.description
+    assert info.language
+
+
+def test_list_templates_returns_all_sorted():
+    names = [info.name for info in generator.list_templates()]
+
+    assert names == sorted(names)
+    assert "python" in names
+
+
+def test_metadata_file_is_not_copied(tmp_path):
+    destination = tmp_path / "mi-api"
+
+    generator.generate("mi-api", "python", destination)
+
+    assert not (destination / generator.METADATA_FILE).exists()

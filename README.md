@@ -21,5 +21,6 @@ python -m pytest
 
 ```bash
 python -m scaffold --help
-python -m scaffold new mi-proyecto
+python -m scaffold list
+python -m scaffold new mi-proyecto -t python-fastapi
 ```
