@@ -47,3 +47,20 @@ def test_list_shows_templates_with_description(capsys):
     output = capsys.readouterr().out
     assert "python-fastapi" in output
     assert "FastAPI" in output
+
+
+def test_new_with_output_creates_project_there(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    output = tmp_path / "proyectos" / "nuevos"
+
+    assert main(["new", "mi-api", "-o", str(output)]) == 0
+    assert (output / "mi-api" / "README.md").is_file()
+    assert not (tmp_path / "mi-api").exists()
+
+
+def test_new_with_output_pointing_to_file_fails(tmp_path, capsys):
+    file = tmp_path / "archivo.txt"
+    file.write_text("hola", encoding="utf-8")
+
+    assert main(["new", "mi-api", "-o", str(file)]) == 1
+    assert "es un archivo" in capsys.readouterr().err

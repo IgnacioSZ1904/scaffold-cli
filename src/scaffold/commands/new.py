@@ -17,12 +17,23 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default="python",
         help="plantilla a usar (por defecto: python)",
     )
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        default=Path("."),
+        help="carpeta donde crear el proyecto (por defecto: la carpeta actual)",
+    )
     parser.set_defaults(func=run)
 
 
 def run(args: argparse.Namespace) -> int:
     """Traduce los argumentos a una llamada al generador."""
-    destination = Path.cwd() / args.name
+    if args.output.is_file():
+        print(f"Error: '{args.output}' es un archivo, no una carpeta", file=sys.stderr)
+        return 1
+
+    destination = (args.output / args.name).resolve()
     try:
         generator.generate(args.name, args.template, destination)
     except (FileExistsError, ValueError) as error:
