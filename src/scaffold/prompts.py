@@ -4,6 +4,8 @@ Es el único módulo que sabe CÓMO se pregunta (con questionary). El resto del
 código solo recibe las respuestas, así que cambiar de librería solo toca aquí.
 """
 
+from pathlib import Path
+
 import questionary
 
 from scaffold import generator
@@ -42,6 +44,23 @@ def ask_template(templates: list[generator.TemplateInfo], default: str) -> str:
         for t in templates
     ]
     return _answer(questionary.select("Plantilla:", choices=choices, default=default))
+
+
+def ask_output() -> Path:
+    """Pide la carpeta donde crear el proyecto (Tab autocompleta rutas)."""
+
+    def validate(text: str) -> bool | str:
+        return "es un archivo, no una carpeta" if Path(text).is_file() else True
+
+    answer = _answer(
+        questionary.path(
+            "Carpeta donde crearlo:",
+            default=".",
+            only_directories=True,
+            validate=validate,
+        )
+    )
+    return Path(answer or ".")
 
 
 def ask_git() -> bool:

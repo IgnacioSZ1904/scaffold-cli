@@ -4,6 +4,8 @@ No se prueba questionary (eso es cosa de la librería): se sustituyen las
 funciones de prompts por respuestas fijas y se comprueba que la CLI las usa.
 """
 
+from pathlib import Path
+
 import pytest
 
 from scaffold import prompts
@@ -16,8 +18,9 @@ def terminal(monkeypatch):
     monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
 
-def fake_answers(monkeypatch, name="mi-api", template="go", git=False):
+def fake_answers(monkeypatch, name="mi-api", template="go", git=False, output="."):
     monkeypatch.setattr(prompts, "ask_name", lambda: name)
+    monkeypatch.setattr(prompts, "ask_output", lambda: Path(output))
     monkeypatch.setattr(prompts, "ask_template", lambda templates, default: template)
     monkeypatch.setattr(prompts, "ask_git", lambda: git)
 
@@ -68,3 +71,24 @@ def test_invalid_name_from_command_line_fails(tmp_path, monkeypatch, capsys):
 
     assert main(["new", "mi api"]) == 1
     assert "letras" in capsys.readouterr().err
+
+
+def test_asks_output_folder_and_creates_project_there(tmp_path, monkeypatch, terminal):
+    monkeypatch.chdir(tmp_path)
+    fake_answers(monkeypatch, output=str(tmp_path / "proyectos"))
+
+    assert main(["new"]) == 0
+    assert (tmp_path / "proyectos" / "mi-api" / "go.mod").is_file()
+
+
+def test_output_given_by_flag_is_not_asked(tmp_path, monkeypatch, terminal):
+    monkeypatch.chdir(tmp_path)
+    fake_answers(monkeypatch)
+
+    def fail():
+        raise AssertionError("no debería preguntar la carpeta")
+
+    monkeypatch.setattr(prompts, "ask_output", fail)
+
+    assert main(["new", "-o", str(tmp_path / "otra")]) == 0
+    assert (tmp_path / "otra" / "mi-api").is_dir()

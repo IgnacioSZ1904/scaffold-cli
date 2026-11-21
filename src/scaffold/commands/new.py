@@ -24,7 +24,6 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         "--output",
         "-o",
         type=Path,
-        default=Path("."),
         help="carpeta donde crear el proyecto (por defecto: la carpeta actual)",
     )
     parser.add_argument(
@@ -57,12 +56,13 @@ def run(args: argparse.Namespace) -> int:
         ui.error(error)
         return 1
     template = args.template or generator.DEFAULT_TEMPLATE
+    output = args.output or Path(".")
 
-    if args.output.is_file():
-        ui.error(f"'{args.output}' es un archivo, no una carpeta")
+    if output.is_file():
+        ui.error(f"'{output}' es un archivo, no una carpeta")
         return 1
 
-    destination = (args.output / args.name).resolve()
+    destination = (output / args.name).resolve()
     try:
         files = generator.plan(args.name, template)
         if args.dry_run:
@@ -92,5 +92,7 @@ def _ask_missing(args: argparse.Namespace) -> None:
         args.template = prompts.ask_template(
             generator.list_templates(), default=generator.DEFAULT_TEMPLATE
         )
+    if args.output is None:
+        args.output = prompts.ask_output()
     if not args.git:
         args.git = prompts.ask_git()
