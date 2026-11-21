@@ -24,6 +24,11 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=Path("."),
         help="carpeta donde crear el proyecto (por defecto: la carpeta actual)",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="muestra qué archivos se crearían, sin crear nada",
+    )
     parser.set_defaults(func=run)
 
 
@@ -35,9 +40,22 @@ def run(args: argparse.Namespace) -> int:
 
     destination = (args.output / args.name).resolve()
     try:
-        generator.generate(args.name, args.template, destination)
+        files = generator.plan(args.name, args.template)
+        if args.dry_run:
+            _print_plan(files, destination)
+            return 0
+        generator.write(files, destination)
     except (FileExistsError, ValueError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
     print(f"Proyecto '{args.name}' creado en {destination}")
     return 0
+
+
+def _print_plan(files: list[generator.PlannedFile], destination: Path) -> None:
+    """Muestra el plan sin escribir nada."""
+    print(f"[dry-run] Se crearían {len(files)} archivos en {destination}:")
+    for file in files:
+        print(f"  {file.path.as_posix()}")
+    if destination.exists():
+        print(f"[dry-run] Aviso: '{destination}' ya existe, la creación real fallaría.")

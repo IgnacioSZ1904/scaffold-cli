@@ -47,35 +47,65 @@ def build_variables(name: str) -> dict[str, str]:
     }
 
 
+@dataclass(frozen=True)
+class PlannedFile:
+    """Un archivo que se va a crear: ruta relativa al proyecto y contenido final."""
+
+    path: Path
+    content: str
+
+
+def plan(name: str, template: str) -> list[PlannedFile]:
+    """Calcula qué archivos tendría el proyecto, SIN tocar el disco.
+
+    Lanza ValueError si la plantilla no existe.
+    """
+    if template not in available_templates():
+        options = ", ".join(available_templates())
+        raise ValueError(f"la plantilla '{template}' no existe (disponibles: {options})")
+
+    variables = build_variables(name)
+    files: list[PlannedFile] = []
+    _collect(TEMPLATES / template, Path(), variables, files)
+    return sorted(files, key=lambda f: f.path.as_posix())
+
+
+def write(files: list[PlannedFile], destination: Path) -> None:
+    """Escribe en `destination` los archivos de un plan.
+
+    Lanza FileExistsError si la carpeta destino ya existe.
+    """
+    if destination.exists():
+        raise FileExistsError(f"la carpeta '{destination}' ya existe")
+    for file in files:
+        target = destination / file.path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(file.content, encoding="utf-8")
+
+
 def generate(name: str, template: str, destination: Path) -> None:
     """Crea el proyecto `name` en `destination` usando la plantilla `template`.
 
     Lanza ValueError si la plantilla no existe y FileExistsError si la
     carpeta destino ya existe.
     """
-    if template not in available_templates():
-        options = ", ".join(available_templates())
-        raise ValueError(f"la plantilla '{template}' no existe (disponibles: {options})")
-    if destination.exists():
-        raise FileExistsError(f"la carpeta '{destination}' ya existe")
-
-    variables = build_variables(name)
-    destination.mkdir(parents=True)
-    _copy_dir(TEMPLATES / template, destination, variables)
+    write(plan(name, template), destination)
 
 
-def _copy_dir(source: Traversable, target: Path, variables: dict[str, str]) -> None:
-    """Copia `source` en `target` recursivamente, sustituyendo variables
-    tanto en los nombres como en el contenido de los archivos."""
+def _collect(
+    source: Traversable,
+    relative: Path,
+    variables: dict[str, str],
+    files: list[PlannedFile],
+) -> None:
+    """Recorre `source` recursivamente y añade a `files` cada archivo ya
+    sustituido (nombre y contenido). `relative` es la ruta dentro del proyecto."""
     for item in source.iterdir():
         if item.name == METADATA_FILE:
             continue  # los metadatos describen la plantilla, no forman parte del proyecto
-        target_name = Template(item.name).safe_substitute(variables)
-        target_path = target / target_name
+        target = relative / Template(item.name).safe_substitute(variables)
         if item.is_dir():
-            target_path.mkdir()
-            _copy_dir(item, target_path, variables)
+            _collect(item, target, variables, files)
         else:
             content = item.read_text(encoding="utf-8")
-            rendered = Template(content).safe_substitute(variables)
-            target_path.write_text(rendered, encoding="utf-8")
+            files.append(PlannedFile(target, Template(content).safe_substitute(variables)))

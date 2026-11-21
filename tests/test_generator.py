@@ -116,3 +116,31 @@ def test_metadata_file_is_not_copied(tmp_path):
     generator.generate("mi-api", "python", destination)
 
     assert not (destination / generator.METADATA_FILE).exists()
+
+
+def test_plan_does_not_touch_disk(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    generator.plan("mi-api", "python")
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_plan_returns_relative_paths_with_substituted_content():
+    files = {f.path.as_posix(): f.content for f in generator.plan("mi-api", "python")}
+
+    assert set(files) == {
+        ".gitignore",
+        "README.md",
+        "pyproject.toml",
+        "src/mi_api/__init__.py",
+    }
+    assert "# mi-api" in files["README.md"]
+
+
+def test_write_fails_if_destination_exists(tmp_path):
+    files = generator.plan("mi-api", "python")
+    tmp_path.joinpath("mi-api").mkdir()
+
+    with pytest.raises(FileExistsError):
+        generator.write(files, tmp_path / "mi-api")

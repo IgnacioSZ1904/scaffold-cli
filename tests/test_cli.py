@@ -64,3 +64,22 @@ def test_new_with_output_pointing_to_file_fails(tmp_path, capsys):
 
     assert main(["new", "mi-api", "-o", str(file)]) == 1
     assert "es un archivo" in capsys.readouterr().err
+
+
+def test_new_dry_run_lists_files_and_creates_nothing(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+
+    assert main(["new", "mi-api", "--dry-run"]) == 0
+
+    output = capsys.readouterr().out
+    assert "[dry-run]" in output
+    assert "src/mi_api/__init__.py" in output
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_new_dry_run_warns_if_folder_exists(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "mi-api").mkdir()
+
+    assert main(["new", "mi-api", "--dry-run"]) == 0
+    assert "ya existe" in capsys.readouterr().out
