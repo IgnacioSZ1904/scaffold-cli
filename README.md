@@ -7,12 +7,19 @@ Herramienta de línea de comandos que genera el esqueleto de un proyecto con una
 ```bash
 python -m venv .venv
 .venv\Scripts\activate      # Windows
-pip install -e .
+python -m pip install --upgrade pip   # --group requiere pip >= 25.1
+python -m pip install -e . --group dev
+```
+
+## Tests
+
+```bash
+python -m pytest
 ```
 
 ## Uso
 
 ```bash
-scaffold --help
-scaffold --version
+python -m scaffold --help
+python -m scaffold new mi-proyecto
 ```
