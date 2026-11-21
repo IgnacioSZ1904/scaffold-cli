@@ -1,8 +1,9 @@
 """Punto de entrada de la línea de comandos."""
 
 import argparse
+import sys
 
-from scaffold import __version__
+from scaffold import __version__, shell
 from scaffold.commands import list_templates, new
 
 
@@ -25,6 +26,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Lee los argumentos y ejecuta la orden. Devuelve el código de salida."""
+    if argv is None:
+        argv = sys.argv[1:]
+    if not argv and sys.stdin.isatty():
+        return shell.run_shell(main)
+
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command is None:

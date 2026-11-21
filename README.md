@@ -19,6 +19,9 @@ python -m pytest
 
 ## Uso
 
+Sin argumentos se abre la consola de scaffold (`scaffold>`), donde puedes escribir `new`, `list`, `help` o `salir`.
+
+
 ```bash
 python -m scaffold --help
 python -m scaffold list
@@ -26,3 +29,13 @@ python -m scaffold new                # modo interactivo
 python -m scaffold new mi-proyecto -t python-fastapi -o ..\proyectos --git
 python -m scaffold new mi-proyecto --dry-run
 ```
+
+## Ejecutable de Windows
+
+```bash
+python -m pip install -e . --group build
+python scripts/build_exe.py
+```
+
+Genera `dist/scaffold.exe`. Al abrirlo con doble clic muestra la consola de scaffold.
+No está firmado digitalmente: Windows puede mostrar un aviso de SmartScreen o bloquearlo.

@@ -9,6 +9,7 @@ description = "Genera el esqueleto de un proyecto con un solo comando."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "prompt-toolkit>=3.0",
     "questionary>=2.1",
     "rich>=15.0",
 ]
@@ -18,6 +19,7 @@ scaffold = "scaffold.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.17.6"]
+build = ["pyinstaller>=6.22"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

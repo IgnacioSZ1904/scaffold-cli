@@ -29,6 +29,21 @@ LANGUAGE_COLORS = {
 }
 
 
+def show_banner() -> None:
+    """Cabecera del modo consola."""
+    from scaffold import __version__
+
+    text = Text.assemble(
+        ("scaffold ", "bold green"),
+        (f"v{__version__}", "dim"),
+        "\nGenera el esqueleto de un proyecto con un solo comando.\n\n",
+        ("Comandos: ", "bold"),
+        "new, list, help, salir   ",
+        ("(Tab autocompleta)", "dim"),
+    )
+    console.print(Panel(text, border_style="green", expand=False))
+
+
 def error(message: str) -> None:
     """Muestra un error en rojo por stderr."""
     err_console.print(Text.assemble(("Error: ", "bold red"), message), soft_wrap=True)
