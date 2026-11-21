@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Los datos no se suben a git (pueden ser grandes o privados)
+data/raw/*
+data/processed/*
+!data/**/.gitkeep
