@@ -1,0 +1,5 @@
+# Binarios compilados
+/$project_name
+*.exe
+*.test
+*.out

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "$project_name"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.165",
+    "uvicorn[standard]>=0.54",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "httpx2>=2.16"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
